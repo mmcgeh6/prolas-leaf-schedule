@@ -31,6 +31,7 @@ const NavBar = () => {
           {navItem("/board", "Board")}
           {navItem("/supervisor", "Supervisor Check-In")}
           {navItem("/reporting", "Reporting")}
+          {navItem("/projects/new", "New Project")}
           {navItem("/seed", "Seed Data")}
         </div>
       </nav>

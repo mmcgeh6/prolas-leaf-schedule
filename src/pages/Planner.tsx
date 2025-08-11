@@ -190,14 +190,32 @@ export default function Planner() {
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-4">
-                              <label className="flex items-center gap-2 text-sm">
-                                <Checkbox id={`mow-${e.id}`} />
-                                <span className="text-foreground/80">Mow</span>
-                              </label>
-                              <label className="flex items-center gap-2 text-sm">
-                                <Checkbox id={`trim-${e.id}`} />
-                                <span className="text-foreground/80">Trim</span>
-                              </label>
+                              <Select defaultValue="none">
+                                <SelectTrigger className="w-36" aria-label={`Quick task A for ${e.name}`}>
+                                  <SelectValue placeholder="Task A" />
+                                </SelectTrigger>
+                                <SelectContent className="z-50">
+                                  <SelectItem value="none">None</SelectItem>
+                                  <SelectItem value="mow">Mowing & Edging</SelectItem>
+                                  <SelectItem value="trim">Trimming</SelectItem>
+                                  <SelectItem value="weed">Weeding</SelectItem>
+                                  <SelectItem value="blow">Blowing</SelectItem>
+                                  <SelectItem value="mulch">Mulching</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Select defaultValue="none">
+                                <SelectTrigger className="w-36" aria-label={`Quick task B for ${e.name}`}>
+                                  <SelectValue placeholder="Task B" />
+                                </SelectTrigger>
+                                <SelectContent className="z-50">
+                                  <SelectItem value="none">None</SelectItem>
+                                  <SelectItem value="mow">Mowing & Edging</SelectItem>
+                                  <SelectItem value="trim">Trimming</SelectItem>
+                                  <SelectItem value="weed">Weeding</SelectItem>
+                                  <SelectItem value="blow">Blowing</SelectItem>
+                                  <SelectItem value="mulch">Mulching</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           </td>
                           <td className="py-4 px-4">
