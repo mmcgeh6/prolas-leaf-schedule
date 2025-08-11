@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { db } from "@/lib/db";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import QRCode from "react-qr-code";
 
 interface EmpRow {
   id: string;
@@ -46,6 +47,14 @@ export default function Supervisor() {
   const [projectId, setProjectId] = useState<string>(projects[0].id);
   const sites = useMemo(() => projects.find(p => p.id === projectId)?.sites ?? [], [projectId]);
   const [siteId, setSiteId] = useState<string>(projects[0].sites[0].id);
+
+  const qrValue = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const url = new URL(`${window.location.origin}/checkin`);
+    url.searchParams.set("project", projectId);
+    url.searchParams.set("site", siteId);
+    return url.toString();
+  }, [projectId, siteId]);
 
   useEffect(() => {
     // Ensure site stays in sync with project
@@ -127,6 +136,30 @@ export default function Supervisor() {
           </div>
 
           <CardContent className="p-0">
+            {/* QR Check-in for current project/site */}
+            <div className="px-6 pt-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">Employee self check-in URL</div>
+                  <button
+                    className="text-primary underline text-sm"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(qrValue);
+                        toast({ title: "Check-in link copied" });
+                      } catch {
+                        toast({ title: "Copy failed", description: qrValue });
+                      }
+                    }}
+                  >
+                    Copy link
+                  </button>
+                </div>
+                <div className="bg-background p-3 rounded-lg border">
+                  <QRCode value={qrValue} size={128} bgColor="transparent" />
+                </div>
+              </div>
+            </div>
             {/* Status bar */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 px-6 pt-4">
               <div className="flex items-center gap-2 text-sm">
