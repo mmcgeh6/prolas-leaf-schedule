@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Line, LineChart, CartesianGrid, AreaChart, Area } from "recharts";
+import { Button } from "@/components/ui/button";
 
 // Demo datasets
 const weeklyData = [
@@ -34,6 +35,21 @@ const projects = [
   ]},
 ];
 
+// Demo employees and timesheets for employee reporting
+const employeesDemo = [
+  { id: "e1", name: "John Doe" },
+  { id: "e2", name: "Jane Smith" },
+  { id: "e3", name: "Mike Johnson" },
+];
+
+const timesheets = [
+  { id: "t1", employeeId: "e1", date: "2023-10-26", project: "Project A", task: "Planting", hours: 8 },
+  { id: "t2", employeeId: "e1", date: "2023-10-27", project: "Project B", task: "Irrigation", hours: 6 },
+  { id: "t3", employeeId: "e2", date: "2023-10-26", project: "Project B", task: "Cleanup", hours: 7.5 },
+  { id: "t4", employeeId: "e3", date: "2023-10-25", project: "Project C", task: "Mulching", hours: 8 },
+  { id: "t5", employeeId: "e2", date: "2023-10-27", project: "Project A", task: "Planting", hours: 5 },
+];
+
 export default function Reporting() {
   const canonical = typeof window !== 'undefined' ? window.location.href : undefined;
 
@@ -44,6 +60,36 @@ export default function Reporting() {
   // Ensure site stays valid when project changes
   const isAllProjects = projectId === "all";
   const effectiveSiteId = isAllProjects ? "all" : siteId;
+
+  // Employee reporting state and aggregates
+  const [employeeId, setEmployeeId] = useState<string>(employeesDemo[0]?.id ?? "");
+  const filteredSheets = useMemo(() => timesheets.filter(t => t.employeeId === employeeId), [employeeId]);
+  const totalHours = useMemo(() => filteredSheets.reduce((sum, t) => sum + t.hours, 0), [filteredSheets]);
+  const byProject = useMemo(() => {
+    const m = new Map<string, number>();
+    filteredSheets.forEach(t => m.set(t.project, (m.get(t.project) ?? 0) + t.hours));
+    return Array.from(m, ([project, hours]) => ({ project, hours }));
+  }, [filteredSheets]);
+  const byTask = useMemo(() => {
+    const m = new Map<string, number>();
+    filteredSheets.forEach(t => m.set(t.task, (m.get(t.task) ?? 0) + t.hours));
+    return Array.from(m, ([task, hours]) => ({ task, hours }));
+  }, [filteredSheets]);
+  const jobsCount = byProject.length;
+
+  const exportCsv = () => {
+    const rows = [["Date", "Employee", "Project", "Task", "Hours"],
+      ...filteredSheets.map(t => [t.date, employeesDemo.find(e=>e.id===t.employeeId)?.name ?? "", t.project, t.task, String(t.hours)])
+    ];
+    const csv = rows.map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `employee-${employeeId}-timesheets.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
@@ -249,6 +295,100 @@ export default function Reporting() {
             </CardContent>
           </Card>
         </section>
+        </section>
+
+        {/* Employee reporting */}
+        <section className="rounded-xl bg-card border shadow-sm p-6 mt-8">
+          <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Employee Reporting</h2>
+              <p className="text-muted-foreground">Totals by job and task for a selected employee.</p>
+            </div>
+            <div className="flex gap-3 items-center">
+              <Select value={employeeId} onValueChange={setEmployeeId}>
+                <SelectTrigger className="w-56">
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employeesDemo.map(e => (
+                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="secondary" onClick={exportCsv}>Export CSV</Button>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Total Hours</p>
+                <p className="mt-2 text-3xl font-bold">{totalHours.toFixed(1)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Jobs Worked</p>
+                <p className="mt-2 text-3xl font-bold">{jobsCount}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <Card>
+              <CardHeader><CardTitle>Hours by Job</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="py-3 px-4 text-left">Project</th>
+                        <th className="py-3 px-4 text-right">Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {byProject.map(row => (
+                        <tr key={row.project} className="border-b hover:bg-accent/10">
+                          <td className="py-3 px-4 font-medium">{row.project}</td>
+                          <td className="py-3 px-4 text-right">{row.hours.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                      {byProject.length === 0 && (
+                        <tr><td className="py-3 px-4 text-muted-foreground" colSpan={2}>No data</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Hours by Task</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="py-3 px-4 text-left">Task</th>
+                        <th className="py-3 px-4 text-right">Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {byTask.map(row => (
+                        <tr key={row.task} className="border-b hover:bg-accent/10">
+                          <td className="py-3 px-4 font-medium">{row.task}</td>
+                          <td className="py-3 px-4 text-right">{row.hours.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                      {byTask.length === 0 && (
+                        <tr><td className="py-3 px-4 text-muted-foreground" colSpan={2}>No data</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
       </main>
     </>

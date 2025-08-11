@@ -13,7 +13,7 @@ import NavBar from "./components/NavBar";
 import ScheduleBoard from "./pages/ScheduleBoard";
 import NewProject from "./pages/NewProject";
 import EmployeeCheckIn from "./pages/EmployeeCheckIn";
-
+import Employees from "./pages/Employees";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -31,6 +31,7 @@ const App = () => (
           <Route path="/board" element={<ScheduleBoard />} />
           <Route path="/projects/new" element={<NewProject />} />
           <Route path="/checkin" element={<EmployeeCheckIn />} />
+          <Route path="/employees" element={<Employees />} />
           <Route path="/seed" element={<SeedData />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
