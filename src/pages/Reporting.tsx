@@ -53,6 +53,7 @@ export default function Reporting() {
         canonical={canonical}
       />
       <main className="container py-8">
+        <section className="rounded-xl bg-card border shadow-sm p-6">
         {/* Header with filters */}
         <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -247,6 +248,7 @@ export default function Reporting() {
               </div>
             </CardContent>
           </Card>
+        </section>
         </section>
       </main>
     </>

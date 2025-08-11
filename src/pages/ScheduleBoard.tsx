@@ -1,10 +1,13 @@
 import Seo from "@/components/Seo";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 import { addDays, format, startOfWeek } from "date-fns";
 
 interface Site { id: string; name: string }
@@ -33,6 +36,7 @@ export default function ScheduleBoard() {
   const [siteFilter, setSiteFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [weekStart, setWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [employees, setEmployees] = useState<EmpCard[]>(seedEmployees);
 
   // Simple board state: map siteId -> employee ids; "unassigned" bucket too
   const [board, setBoard] = useState<Record<string, string[]>>({
@@ -47,7 +51,25 @@ export default function ScheduleBoard() {
     return [{ id: "all", name: "All Sites" }, ...current];
   }, [projectId]);
 
-  const employeesById = useMemo(() => Object.fromEntries(seedEmployees.map(e => [e.id, e])), []);
+  const employeesById = useMemo(() => Object.fromEntries(employees.map(e => [e.id, e])), [employees]);
+
+  const [selectedId, setSelectedId] = useState<string>(employees[0]?.id ?? "");
+  const selected = selectedId ? employeesById[selectedId] : undefined;
+  const [edit, setEdit] = useState<{ status: EmpCard["status"]; planned: number; total: number; tasks: string }>({
+    status: selected?.status ?? "Scheduled",
+    planned: selected?.planned ?? 0,
+    total: selected?.total ?? 0,
+    tasks: (selected?.tasks ?? []).join(", "),
+  });
+  useEffect(() => {
+    if (!selected) return;
+    setEdit({
+      status: selected.status,
+      planned: selected.planned,
+      total: selected.total,
+      tasks: (selected.tasks ?? []).join(", "),
+    });
+  }, [selectedId, employees]);
 
   const visibleColumns = useMemo(() => {
     const currentSites = projects.find(p => p.id === projectId)?.sites ?? [];
@@ -97,6 +119,28 @@ export default function ScheduleBoard() {
     }
   };
 
+  const { toast } = useToast();
+  const handleSave = () => {
+    if (!selectedId) return;
+    setEmployees(prev =>
+      prev.map(e =>
+        e.id === selectedId
+          ? {
+              ...e,
+              status: edit.status,
+              planned: edit.planned,
+              total: edit.total,
+              tasks: edit.tasks
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean),
+            }
+          : e
+      )
+    );
+    toast({ title: "Employee updated", description: "Changes applied for this session." });
+  };
+
   return (
     <>
       <Seo
@@ -105,6 +149,7 @@ export default function ScheduleBoard() {
         canonical={canonical}
       />
       <main className="container py-8">
+        <section className="rounded-xl bg-card border shadow-sm p-6">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -181,6 +226,71 @@ export default function ScheduleBoard() {
             );
           })}
         </div>
+
+        {/* Employee Stats & Editor */}
+        <div className="mt-8 rounded-lg border bg-muted/30 p-4">
+          <h2 className="text-xl font-semibold tracking-tight mb-4">Employee Details</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select employee" /></SelectTrigger>
+              <SelectContent>
+                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <div className="rounded-lg border bg-background p-4">
+              <p className="text-sm text-muted-foreground">Planned vs Actual</p>
+              {selected && (
+                <p className="text-2xl font-bold">{selected.total.toFixed(1)} / {selected.planned.toFixed(1)} hrs</p>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-background p-4">
+              <p className="text-sm text-muted-foreground">% Complete</p>
+              {selected && (
+                <p className="text-2xl font-bold">{Math.round((selected.total / Math.max(selected.planned, 1)) * 100)}%</p>
+              )}
+            </div>
+          </div>
+
+          {selected && (
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={edit.status} onValueChange={(v) => setEdit((prev) => ({ ...prev, status: v as EmpCard['status'] }))}>
+                  <SelectTrigger id="status"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Scheduled">Scheduled</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="planned">Planned Hours</Label>
+                <Input id="planned" type="number" step="0.5" value={edit.planned} onChange={(e) => setEdit((prev) => ({ ...prev, planned: Number(e.target.value) }))} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="total">Actual Hours</Label>
+                <Input id="total" type="number" step="0.5" value={edit.total} onChange={(e) => setEdit((prev) => ({ ...prev, total: Number(e.target.value) }))} />
+              </div>
+
+              <div className="md:col-span-3 space-y-2">
+                <Label htmlFor="tasks">Tasks (comma separated)</Label>
+                <Textarea id="tasks" rows={3} value={edit.tasks ?? ''} onChange={(e) => setEdit((prev) => ({ ...prev, tasks: e.target.value }))} />
+              </div>
+
+              <div className="md:col-span-3 flex items-center gap-3">
+                <Button onClick={handleSave}>Save Changes</Button>
+                <p className="text-sm text-muted-foreground">Changes are local to this demo.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        </section>
       </main>
     </>
   );
