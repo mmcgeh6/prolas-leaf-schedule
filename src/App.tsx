@@ -10,6 +10,7 @@ import Reporting from "./pages/Reporting";
 import SeedData from "./pages/SeedData";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
+import ScheduleBoard from "./pages/ScheduleBoard";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/planner" element={<Planner />} />
           <Route path="/supervisor" element={<Supervisor />} />
           <Route path="/reporting" element={<Reporting />} />
+          <Route path="/board" element={<ScheduleBoard />} />
           <Route path="/seed" element={<SeedData />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

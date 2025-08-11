@@ -28,6 +28,7 @@ const NavBar = () => {
         </Link>
         <div className="flex items-center gap-1">
           {navItem("/planner", "Planner")}
+          {navItem("/board", "Board")}
           {navItem("/supervisor", "Supervisor Check-In")}
           {navItem("/reporting", "Reporting")}
           {navItem("/seed", "Seed Data")}
