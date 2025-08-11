@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ScheduleBoard from "./pages/ScheduleBoard";
 import NewProject from "./pages/NewProject";
+import EmployeeCheckIn from "./pages/EmployeeCheckIn";
 
 const queryClient = new QueryClient();
 
