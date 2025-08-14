@@ -207,12 +207,12 @@ export default function EmployeesPage() {
                   </div>
                   <div>
                     <Label>Foreman</Label>
-                    <Select value={crewForm.foremanId ?? ""} onValueChange={(v) => setCrewForm({ ...crewForm, foremanId: v || undefined })}>
+                    <Select value={crewForm.foremanId ?? "none"} onValueChange={(v) => setCrewForm({ ...crewForm, foremanId: v === "none" ? undefined : v })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select foreman" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {employees.map(e => (
                           <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
                         ))}
@@ -253,12 +253,12 @@ export default function EmployeesPage() {
                             </div>
                             <div className="md:col-span-1">
                               <Label>Foreman</Label>
-                              <Select value={crewForm.foremanId ?? ""} onValueChange={(v) => setCrewForm({ ...crewForm, foremanId: v || undefined })}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select foreman" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="">None</SelectItem>
+                               <Select value={crewForm.foremanId ?? "none"} onValueChange={(v) => setCrewForm({ ...crewForm, foremanId: v === "none" ? undefined : v })}>
+                                 <SelectTrigger>
+                                   <SelectValue placeholder="Select foreman" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                   <SelectItem value="none">None</SelectItem>
                                   {employees.map(e => (
                                     <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
                                   ))}
