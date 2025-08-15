@@ -32,8 +32,6 @@ const NavBar = () => {
           {navItem("/supervisor", "Supervisor Check-In")}
           {navItem("/reporting", "Reporting")}
           {navItem("/employees", "Employees")}
-          {navItem("/projects/new", "New Project")}
-          {navItem("/seed", "Seed Data")}
         </div>
       </nav>
     </header>
